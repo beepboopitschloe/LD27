@@ -1,10 +1,25 @@
 /*
 	gui.js
-	Herein lie the GUI components to be used in POTENTAM LIMITATAM.
+	Herein lie the GUI components to be used in POTENTIAM LIMITATAM.
 	
 	Created for Ludum Dare 27 - 10 Seconds
 	(c) Noah Muth 2013
 */
+
+// text which displays current FPS
+Crafty.c('FPSText', {
+	init: function() {
+		this.requires('2D, DOM, Text, FPS')
+			.attr({ x: 4, y: 32 })
+			.css($tooltip_css)
+			.text('FPS: ');
+		
+		// apparently there is a spelling error in CraftyJS.
+		this.bind('MessureFPS', function(fps) {
+			this.text('FPS: ' + fps.value);
+		});
+	}
+});
 
 // a basic GUI window
 Crafty.c('GUI_Window', {
@@ -16,7 +31,7 @@ Crafty.c('GUI_Window', {
 		this.windowText = Crafty.e('2D, DOM, Text')
 			.attr( { x: this.x+16, y: this.y+16 } )
 			.text("TEST TEXT GOES ON FOR DAYS")
-			.css($text_css);
+			.css($tooltip_css);
 		
 		this.bind('EnterFrame', function(frameNumber) {
 			if (this.isDown('SPACE')) {
@@ -39,8 +54,9 @@ Crafty.c('GUI_Window', {
 Crafty.c('Tooltip', {
 	init: function() {
 		this.requires('GUI_Window')
-			.attr( { x: Crafty.mousePos.x, y: Crafty.mousePos.y, w: 246, h: 128 } );
+			.attr( { x: Crafty.mousePos.x, y: Crafty.mousePos.y, w: 0, h: 0 } );
 		
+		this.setText('Test Tooltip');
 		this.windowText.attr( { x: this.x+4, y: this.y+4 } );
 		
 		this.bind('EnterFrame', function(frameNumber) {
