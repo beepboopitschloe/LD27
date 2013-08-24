@@ -65,3 +65,78 @@ Crafty.c('Tooltip', {
 		});
 	}
 });
+
+// this array is all build menu options. an option's index in the array is equal to
+// 		the index of its sprite in build_menu_options.gif. an option's value is equal
+//		to its building component.
+var build_options = [
+	'Building'
+];
+
+// this component is a drop-down menu for building something.
+Crafty.c('BuildMenu', {
+	init: function() {
+		this.requires('2D, Mouse');
+		
+		this.menuOptions = []
+	},
+	
+	BuildMenu: function(x, y) {
+		this.placeAtX = x; this.placeAtY = y;
+		
+		this.attr({
+			x: Crafty.mousePos.x,
+			y: Crafty.mousePos.y,
+			w: 128,
+			h: 64,
+			
+			z: Game.gui_Z()
+		});
+		
+		console.log(Game.sky_Z() + " " + Game.gui_Z());
+		
+		this.menuOptions = [Crafty.e('BuildMenuOption').BuildMenuOption(this, 'Building')]
+	},
+	
+	select: function(option) {
+		building = Crafty.e('BuildingPlot').BuildingPlot(option.name);
+		
+		World.map.place(this.placeAtX, this.placeAtY, 0, building);
+		building.tileSetup([this.placeAtX, this.placeAtY]);
+		building.setZusingY();
+		
+		this.deconstruct();
+	},
+	
+	deconstruct: function() {
+		for (var x = 0; x < this.menuOptions.length; x++) {
+			this.menuOptions[x].destroy();
+		}
+		
+		this.destroy();
+	}
+});
+
+// this is an option for use with the build menu.
+Crafty.c('BuildMenuOption', {
+	init: function() {
+		this.requires('2D, Canvas, opt_build_menu, Mouse');
+	},
+	
+	BuildMenuOption: function(parentMenu, name) {
+		this.attr( {
+			x: parentMenu.x + 4,
+			y: parentMenu.y + 4,
+			z: parentMenu.z + 1,
+			name: name,
+			parentMenu: parentMenu } );
+		
+		this.sprite(0, build_options.indexOf(this.name), 1, 1);
+		
+		this.bind('MouseUp', function(e) {
+			this.parentMenu.select(this);
+		});
+		
+		return this;
+	}
+});

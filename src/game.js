@@ -6,6 +6,37 @@
 	(c) Noah Muth 2013
 */
 
+// the world map and associated methods
+World = {
+	map: Crafty.isometric.size(64),
+	
+	map_width: function() { return 32; },
+	
+	map_height: function() { return 32; },
+	
+	map_tiles: []
+}
+
+// mouse controller
+MouseController = {
+	state: 'gameplay',
+	
+	possibleStates: [
+		'gameplay',	// when the mouse is being used for gameplay purposes ex. selecting tiles
+
+		'gui'		// when the mouse is being used for gui elements ex. menus
+	],
+	
+	changeState: function(stateIn) {
+		if (this.possibleStates.indexOf(stateIn) == -1) {
+			console.log('Failed to change mouse state: state not extant');
+			return;
+		} else {
+			this.state = stateIn;
+		}
+	}
+}
+
 // the Game object begins the game.
 Game = {
 	// width & height of the stage
@@ -25,11 +56,15 @@ Game = {
 	viewportHeight: function() {
 		return 640;
 	},
-
-	map: Crafty.isometric.size(64),
-	map_width: function() { return 32; },
-	map_height: function() { return 32; },
-	map_tiles: [],
+	
+	// z-coordinates for various elements
+	sky_Z: function() {
+		return Game.height()/16 + 1;
+	},
+	
+	gui_Z: function() {
+		return Game.sky_Z() + 1;
+	},
 	
 	// init function
 	start: function() {

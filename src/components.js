@@ -34,35 +34,6 @@ Crafty.c('Actor', {
 	}
 });
 
-// this component handles mouse input.
-Crafty.c('MouseController', {
-	init: function() {
-		this.requires('2D, Mouse');
-		
-		this.attr({
-			x: 0,
-			y: 0,
-			w: Game.width(),
-			h: Game.width()
-		});
-		
-		console.log('setting up mouse control');
-		
-		this.bind('MouseUp', function(e) {
-			console.log('MOUSE EVENT');
-			console.log(Crafty.mousePos.x + " " + Crafty.mousePos.y);
-			
-			isoCoords = Game.map.px2pos(Crafty.mousePos.x, Crafty.mousePos.y);
-			
-			console.log(isoCoords.x + ', ' + isoCoords.y);
-			
-			//if (e.mouseButton == Crafty.mouseButtons.RIGHT) {
-			//	Game.map.place(isoCoords.x, isoCoords.y, 1, Crafty.e('Building'));
-			//}
-		});
-	}
-});
-
 // this coloured rectangle is used for the day/night cycle.
 Crafty.c('Sky', {
 	init: function() {
@@ -72,6 +43,7 @@ Crafty.c('Sky', {
 				y: 0,
 				w: Game.width(),
 				h: Game.height(),
+				z: Game.sky_Z(),
 				alpha: 0.5
 				})
 			.color('rgb(0,0,255)');
@@ -79,8 +51,14 @@ Crafty.c('Sky', {
 		this.state = 'night';
 		
 		this.control = function(frameNumber) {
+			// DEBUG: initiate day/night cycle
 			if (this.isDown('SPACE')) {
 				this.start();
+			}
+			
+			// DEBUG: make day or night. T for toggle.
+			else if (this.isDown('T')) {
+				this.cycle()
 			}
 		}
 		
@@ -114,7 +92,7 @@ Crafty.c('Sky', {
 		Crafty.trigger('TimeIsDay');
 		this.state = 'day';
 		this.tween( {alpha: 0.0}, 1);
-		this.delay(this.cycle, 5000, -1);
+		this.delay(this.cycle, 10000, -1);
 	},
 	
 	cycle: function() {
@@ -194,26 +172,78 @@ Crafty.c('Grass', {
 		
 		this.bind('MouseUp', function(e) {
 			if (this.mouseControlOn) {
+				if (e.mouseButton == Crafty.mouseButtons.LEFT) {
+					replaceTile(this, Crafty.e('BuildingPlot'), World.map);
+				}
 				if (e.mouseButton == Crafty.mouseButtons.RIGHT) {
-					// place a building
-					tile = Crafty.e('Building');
-					Game.map.place(this.tile_x, this.tile_y, 0, tile);
-					Crafty.trigger('ItemPlaced');
-					tile.tileSetup([this.tile_x, this.tile_y]);
-					
-					// redraw around the building
-					Game.map_tiles[tile_x][tile_y+1].draw(this.x, this.y, this.x, this.y - 128);
-					
-					// destroy the grass tile
-					this.destroy();
+					// open the build menu
+					Crafty.e('BuildMenu').BuildMenu(this.tile_x, this.tile_y);
 				}
 			}
+		});
+	}
+});
+
+// this is a building plot. It can be placed at night, and will be built during the day.
+Crafty.c('BuildingPlot', {
+	init: function() {
+		this.requires('2D, Canvas, NocturnalTile, Mouse, spr_building_plot');
+		
+		this.tooltip = null;
+		this.type = null;
+		
+		this.areaMap(
+				[17, 49],
+				[17, 25],
+				[32, 17],
+				[48, 25],
+				[48, 49],
+				[32, 57]
+			);
+		
+		// tell the plot to become a building during the day
+		this.bind('TimeIsDay', function() {
+			tile = Crafty.e(this.type);
+			replaceTile(this, tile, World.map);
+		});
+		
+		this.bind('MouseOver', function() {
+			this.spawnInfoWindow();
+		});
+		
+		this.bind('MouseOut', function() {
+			this.destroyInfoWindow();
+		});
+		
+		this.bind('MouseUp', function(e) {
 			if (e.mouseButton == Crafty.mouseButtons.LEFT) {
-				coords = Game.map.px2pos(Crafty.mousePos.x, Crafty.mousePos.y);
+				coords = World.map.px2pos(Crafty.mousePos.x, Crafty.mousePos.y);
 				
 				console.log('coords: ' + coords.x + ', ' + coords.y);
 			}
 		});
+	},
+	
+	// this constructor takes the name of the component this plot should turn into.
+	BuildingPlot: function(building) {
+		this.type = building;
+		
+		return this;
+	},
+	
+	// this terribly-named function sets the z coordinate according to the building's y coordinate.
+	setZusingY: function() {
+		this.attr( { z: Math.floor(this.y/16) } );
+		console.log(this.z);
+	},
+	
+	spawnInfoWindow: function() {
+		this.tooltip = Crafty.e('Tooltip');
+	},
+	
+	destroyInfoWindow: function() {
+		this.tooltip.deconstruct();
+		this.tooltip = null;
 	}
 });
 
@@ -224,7 +254,6 @@ Crafty.c('Building', {
 		
 		this.tooltip = null;
 		
-		// this is an in-progress attempt to fix the bounding box issue.
 		this.areaMap(
 				[17, 49],
 				[17, 25],
@@ -244,11 +273,17 @@ Crafty.c('Building', {
 		
 		this.bind('MouseUp', function(e) {
 			if (e.mouseButton == Crafty.mouseButtons.LEFT) {
-				coords = Game.map.px2pos(Crafty.mousePos.x, Crafty.mousePos.y);
+				coords = World.map.px2pos(Crafty.mousePos.x, Crafty.mousePos.y);
 				
 				console.log('coords: ' + coords.x + ', ' + coords.y);
 			}
 		});
+	},
+	
+	// this terribly-named function sets the z coordinate according to the building's y coordinate.
+	setZusingY: function() {
+		this.attr( { z: Math.floor(this.y/16) } );
+		console.log(this.z);
 	},
 	
 	spawnInfoWindow: function() {

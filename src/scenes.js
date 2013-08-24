@@ -17,34 +17,28 @@ Crafty.scene('Game', function() {
 	var area = {
 		x: {
 			start: 0,
-			end: Game.map_width() },
+			end: World.map_width() },
 		y: {
 			start: 0,
-			end: Game.map_height() }
+			end: World.map_height() }
 		};
 	
 	console.log(area.x.start + " to " + area.x.end);
 	console.log(area.y.start + " to " + area.y.end);
 	
 	for (var x = area.x.start; x < area.x.end; x++) {
-		Game.map_tiles[x] = [];
+		World.map_tiles[x] = [];
 		for (var y = area.y.start; y < area.y.end; y++) {
 			tile = Crafty.e("Grass");
-			Game.map.place(x, y, 0, tile);
-			Crafty.trigger('ItemPlaced');
+			World.map.place(x, y, 0, tile);
 			tile.tileSetup([x,y]);
 			
-			Game.map_tiles[x][y] = tile;
+			World.map_tiles[x][y] = tile;
 		}
 	}
-
-	Game.map.place(5, 5, 0, Crafty.e("Building"));
-	Game.map.place(7, 6, 0, Crafty.e("Building"));
-	Game.map.place(4, 5, 0, Crafty.e("Building"));
-	Crafty.trigger('ItemPlaced');
 	
 	// set up the sky.
-	var sky = Crafty.e('Sky').attr({z: 1});
+	var sky = Crafty.e('Sky').attr({z: Game.height()/16 + 1});
 	// init mouse control
 	//var mouseController = Crafty.e('MouseController');
 });
@@ -58,11 +52,27 @@ Crafty.scene('Loading', function() {
 	
 	// load assets
 	Crafty.load([
+		// terrain assets
 		'assets/grass.gif',
-		'assets/sample_building_64.gif'
+		
+		// building assets
+		'assets/building_plot.gif',
+		'assets/sample_building_64.gif',
+		
+		// GUI assets
+		'assets/build_menu_options.gif'
 		], function() {
+			// terrain assets
 			Crafty.sprite(64, 'assets/grass.gif', { spr_grass: [0,0] });
+			
+			// building assets
+			Crafty.sprite(64, 'assets/building_plot.gif', { spr_building_plot: [0,0] });
 			Crafty.sprite(64, 'assets/sample_building_64.gif', { spr_building: [0,0] });
+			
+			// GUI assets
+			Crafty.sprite(128, 16, 'assets/build_menu_options.gif', {
+					opt_build_menu: [0, 0]
+				});
 			
 			// enter game scene
 			Crafty.scene("Game");
