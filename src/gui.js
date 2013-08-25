@@ -141,7 +141,7 @@ Crafty.c('FloatingInfoText', {
 		var hangTime = 0;
 		
 		if (typeof hang === 'undefined') {
-			hangTime = 500;
+			hangTime = 600;
 		} else {
 			hangTime = hang;
 		}
