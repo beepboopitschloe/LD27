@@ -25,6 +25,7 @@ Crafty.scene('Game', function() {
 	// set up invisible controllers
 	//var screenControl = Crafty.e('ScreenScroll'); BROKEN
 	PlayerVillage.taskHandler = Crafty.e('TaskHandler');
+	PlayerVillage.popHandler = Crafty.e('PopHandler');
 	
 	var area = {
 		x: {
@@ -43,9 +44,13 @@ Crafty.scene('Game', function() {
 		for (var y = area.y.start; y < area.y.end; y++) {
 			num = randomNumber(0, 20);
 			
-			if (num <= 5) {
+			if (x == World.map_width()/2 && y == World.map_height()/2) {
+				tile = Crafty.e('House');
+			} else if (num <= 3) {
 				tile = Crafty.e('Tree');
-			} else if (num > 5 && num <= 10) {
+			} else if (num > 3 && num < 7) {
+				tile = Crafty.e('BerryBush');
+			} else if (num > 7 && num <= 10) {
 				tile = Crafty.e('Stone');
 			} else {
 				tile = Crafty.e('Grass');
@@ -59,8 +64,6 @@ Crafty.scene('Game', function() {
 		}
 	}
 	
-	World.map.place(5, 5, 0, Crafty.e('Tree'));
-	World.map.place(5, 6, 0, Crafty.e('Stone'));
 	// set up the sky.
 	var sky = Crafty.e('Sky').attr({z: Game.height()/16 + 1});
 	// init mouse control
@@ -79,6 +82,8 @@ Crafty.scene('Loading', function() {
 		// terrain assets
 		'assets/grass.gif',
 		'assets/tree.gif',
+		'assets/stone.gif',
+		'assets/berry_bush.gif',
 		
 		// building assets
 		'assets/building_plot.gif',
@@ -93,6 +98,7 @@ Crafty.scene('Loading', function() {
 			Crafty.sprite(64, 'assets/grass.gif', { spr_grass: [0,0] });
 			Crafty.sprite(64, 'assets/tree.gif', { spr_tree: [0,0] });
 			Crafty.sprite(64, 'assets/stone.gif', { spr_stone: [0,0] });
+			Crafty.sprite(64, 'assets/berry_bush.gif', { spr_berry_bush: [0,0] });
 			
 			// building assets
 			Crafty.sprite(64, 'assets/building_plot.gif', { spr_building_plot: [0,0] });
@@ -108,4 +114,13 @@ Crafty.scene('Loading', function() {
 			// enter game scene
 			Crafty.scene("Game");
 	});
+});
+
+Crafty.scene('Lose', function() {
+	this.failureText = Crafty.e('2D, DOM, Text')
+		.attr( {
+			x: Game.viewportWidth()/4,
+			y: Game.viewportHeight()/4 } )
+			.text(" YOU LOSE, PRESS REFRESH TO TRY AGAIN ")
+			.css($text_css);
 });

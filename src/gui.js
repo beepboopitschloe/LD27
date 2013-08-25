@@ -125,12 +125,82 @@ Crafty.c('Tooltip', {
 	}
 });
 
+// floating informational text.
+Crafty.c('FloatingInfoText', {
+	init: function() {
+		this.requires('2D, DOM, Text, Tween');
+	},
+	
+	FloatingInfoText: function(xIn, yIn, textIn, hang) {
+		this.attr( {
+			x: xIn,
+			y: yIn })
+		  .css($tooltip_css)
+		  .text(textIn);
+		
+		var hangTime = 0;
+		
+		if (typeof hang === 'undefined') {
+			hangTime = 500;
+		} else {
+			hangTime = hang;
+		}
+		
+		this.tweenSpeed = 120;
+		
+		this.timeout(this.tweenAway, hangTime);
+		
+		this.bind('TweenEnd', this.destroy);
+		
+		return this;
+	},
+	
+	tweenAway: function() {
+		this.tween( {
+		alpha: 0.0,
+		x: this._x,
+		y: this._y - 256, }, this.tweenSpeed);
+	}
+});
+
+// game log text. Hangs around in the lower right for two seconds, then tweens away.
+Crafty.c('GameLogText', {
+	init: function() {
+		this.requires('2D, DOM, Text, Tween');
+	},
+	
+	GameLogText: function(textIn) {
+		this.attr( {
+			x: (Game.viewportWidth()/3) * 2,
+			y: (Game.viewportHeight() - 32) })
+		  .css($tooltip_css)
+		  .text(textIn);
+		
+		this.tweenSpeed = 120;
+		
+		this.timeout(this.tweenAway, 2000);
+		
+		this.bind('TweenEnd', this.destroy);
+		
+		return this;
+	},
+	
+	tweenAway: function() {
+		this.tween( {
+		alpha: 0.0,
+		x: this._x,
+		y: this._y - 256, }, this.tweenSpeed);
+	}
+});
+
 // this component is a drop-down menu for building something.
 Crafty.c('BuildMenu', {
 	init: function() {
 		this.requires('2D, Mouse');
 		
 		this.menuOptions = []
+		
+		this.bind('TimeIsDay', this.deconstruct);
 	},
 	
 	BuildMenu: function(x, y) {
@@ -200,11 +270,15 @@ Crafty.c('BuildMenuOption', {
 		if (this.name != 'Close') {
 			cost = Buildings.lookupCost(this.name);
 		
-			this.tooltip.setText(this.name + '\n'
+			textString = this.name + '; '
 				+ '  Cost: '
 				+ cost.wood + ' wood, '
 				+ cost.food + ' food, '
-				+ cost.stone + ' stone');
+				+ cost.stone + ' stone';
+			
+			textString = textString + '. ' + Buildings.lookupBenefitString(this.name).str;
+		
+			this.tooltip.setText(textString);
 		} else {
 			this.tooltip.setText('Close the menu.');
 		}

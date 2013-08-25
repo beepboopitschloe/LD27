@@ -177,10 +177,8 @@ Crafty.c('Grass', {
 		
 		this.bind('MouseUp', function(e) {
 			if (this.mouseControlOn) {
-				if (e.mouseButton == Crafty.mouseButtons.RIGHT) {
-					// open the build menu
-					Crafty.e('BuildMenu').BuildMenu(this.tile_x, this.tile_y);
-				}
+				// open the build menu
+				Crafty.e('BuildMenu').BuildMenu(this.tile_x, this.tile_y);
 			}
 		});
 	}
@@ -192,23 +190,29 @@ Crafty.c('NaturalResource', {
 		this.requires("2D, Canvas, NocturnalTile, Mouse");
 		
 		this.markedForHarvesting = false;
+		this._type = 'food';
+		this._amount = 1;
 		
-		this.bind('MouseOver', function() {
-			this.sprite(0, 1, 1, 1);
-		});
+		this.bind('MouseOver', this.highlight);
 		
-		this.bind('MouseOut', function() {
-			this.sprite(0, 0, 1, 1);
-		});
+		this.bind('MouseOut', this.dehighlight);
 		
 		this.bind('MouseUp', function(e) {
 			if (this.mouseControlOn) {
-				this.sprite(0, 1, 1, 1);
-				this.unbind('MouseOut');
-				this.unbind('MouseOver');
+				if (e.mouseButton == Crafty.mouseButtons.LEFT) {
+					this.highlight();
+					this.unbind('MouseOver', this.highlight);
+					this.unbind('MouseOut', this.dehighlight);
 				
-				this.markedForHarvesting = true;
-				PlayerVillage.taskHandler.add(this);
+					this.markedForHarvesting = true;
+					PlayerVillage.taskHandler.add(this);
+				} else if (e.mouseButton == Crafty.mouseButtons.RIGHT) {
+					this.dehighlight();
+					this.bind('MouseOver', this.highlight);
+					this.bind('MouseOut', this.dehighlight);
+					this.markedForHarvesting = false;
+					PlayerVillage.taskHandler.remove(this);
+				}
 			}
 		});
 			
@@ -217,13 +221,47 @@ Crafty.c('NaturalResource', {
 				//this.timeout(this.harvest, 1000);
 			}
 		});
+	},
+	
+	highlight: function() {
+		this.sprite(0, 1, 1, 1);
+	},
+	
+	dehighlight: function() {
+		this.sprite(0, 0, 1, 1);
+	},
+	
+	setType: function(typeIn) {
+		this._type = typeIn;
+		return this;
+	},
+	
+	setAmount: function(amountIn) {
+		this._amount = amountIn;
+		return this;
+	},
+	
+	setTypeAndAmount: function(typeIn, amountIn) {
+		this.setType(typeIn).setAmount(amountIn);
+		return this;
+	},
+	
+	harvest: function() {
+		PlayerVillage.updateResources(this._type, this._amount);
+		Crafty.e('FloatingInfoText').FloatingInfoText(this._x, this._y,
+				this._amount + ' ' + this._type + ' harvested');
+		replaceTile(this, Crafty.e('Grass'), World.map);
 	}
 });
 
 // tree tile
 Crafty.c('Tree', {
 	init: function() {
-		this.requires('NaturalResource, spr_tree');
+		this.requires('NaturalResource, HasTooltip, spr_tree');
+		
+		this.setTypeAndAmount('wood', 5);
+		
+		this.setTooltipText('Tree - harvest this for 5 wood');
 		
 		this.areaMap(
 			[0, 47],
@@ -232,18 +270,17 @@ Crafty.c('Tree', {
 			[64, 47],
 			[32, 64]
 			);
-	},
-	
-	harvest: function() {
-		PlayerVillage.updateResources('wood', 10);
-		replaceTile(this, Crafty.e('Grass'), World.map);
 	}
 });
 
 // stone tile
 Crafty.c('Stone', {
 	init: function() {
-		this.requires('NaturalResource, spr_stone');
+		this.requires('NaturalResource, HasTooltip, spr_stone');
+		
+		this.setTypeAndAmount('stone', 4);
+		
+		this.setTooltipText('Rock - harvest this for 2 stone');
 		
 		this.areaMap(
 			[0,48],
@@ -251,12 +288,24 @@ Crafty.c('Stone', {
 			[64,48],
 			[32,64]
 			);
-		
-	},
+	}
+});
 
-	harvest: function() {
-		PlayerVillage.updateResources('stone', 4);
-		replaceTile(this, Crafty.e('Grass'), World.map);
+// a bush that can be harvested for food
+Crafty.c('BerryBush', {
+	init: function() {
+		this.requires('NaturalResource, HasTooltip, spr_berry_bush');
+		
+		this.setTypeAndAmount('food', 3);
+		
+		this.setTooltipText('Berry Bush - harvest this for 3 food');
+		
+		this.areaMap(
+			[0,48],
+			[32,32],
+			[64,48],
+			[32,64]
+			);
 	}
 });
 
@@ -274,6 +323,10 @@ Crafty.c('HasTooltip', {
 		this.bind('MouseOut', function() {
 			this.tooltip.hide();
 		});
+	},
+	
+	setTooltipText: function(textIn) {
+		this.tooltip.setText(textIn);
 	}
 });
 
@@ -340,6 +393,9 @@ Crafty.c('ResourceProducer', {
 		console.log('Yielded ' + this._yield + " " + this._type);
 		PlayerVillage.updateResources(this._type, this._yield);
 		this._full = false;
+		
+		Crafty.e('FloatingInfoText').FloatingInfoText(this._x, this._y, 'harvested');
+		
 		return 'success';
 	}
 });

@@ -18,13 +18,17 @@ Crafty.c('TaskHandler', {
 		PlayerVillage.tasks.push(task);
 	},
 	
+	remove: function(task) {
+		index = PlayerVillage.tasks.indexOf(task);
+		
+		PlayerVillage.tasks.splice(index, 1);
+	},
+	
 	performTasks: function() {
-		taskList = PlayerVillage.tasks.reverse();
-		PlayerVillage.tasks.reverse();
 		unfinishedTasks = [];
 		
 		for (var i = 0; i < PlayerVillage.resources.population; i++) {
-			task = taskList.pop();
+			task = PlayerVillage.tasks.pop();
 			if (task == 'undefined') {
 				continue;
 			}
@@ -48,6 +52,46 @@ Crafty.c('TaskHandler', {
 		
 		for (var i = 0; i < unfinishedTasks.length; i++) {
 			this.add(unfinishedTasks.pop());
+		}
+	}
+});
+
+Crafty.c('PopHandler', {
+	init: function() {
+		console.log('population handler init');
+		this.bind('TimeIsDay', function() {
+			this.timeout(this.handlePop, 1500);
+		});
+	},
+	
+	handlePop: function() {
+		
+		foodPerPerson = 2;
+		foodNeeds = PlayerVillage.resources.population*foodPerPerson;
+
+		if (PlayerVillage.resources.food >= foodNeeds) {
+			
+			PlayerVillage.updateResources('food', -foodNeeds);
+			
+			Crafty.e('GameLogText').GameLogText(PlayerVillage.resources.population + ' people ate '
+				+ foodNeeds + ' total units of food.');
+		} else if (PlayerVillage.resources.food < foodNeeds) {
+			// if you don't have enough food to feed everybody, eat all current food
+			
+			// calculate how many will starve
+			diff = foodNeeds - PlayerVillage.resources.food;
+			
+			PlayerVillage.updateResources('food', -PlayerVillage.resources.food);
+			
+			// and apply the negative number to the population, starving them to death.
+			starved = Math.round((-diff)/foodPerPerson);
+			PlayerVillage.updateResources('population', starved);
+			
+			Crafty.e('GameLogText').GameLogText(starved + ' people starved due to lack of food.');
+			
+			if (PlayerVillage.resources.population <= 0) {
+				Crafty.scene('Lose');
+			}
 		}
 	}
 });

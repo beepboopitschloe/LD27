@@ -41,10 +41,8 @@ Crafty.c('BuildingPlot', {
 		this.bind('TimeIsDay', function() { PlayerVillage.taskHandler.add(this); } );
 		
 		this.bind('MouseUp', function(e) {
-			if (e.mouseButton == Crafty.mouseButtons.LEFT) {
-				coords = World.map.px2pos(Crafty.mousePos.x, Crafty.mousePos.y);
-				
-				console.log('coords: ' + coords.x + ', ' + coords.y);
+			if (e.mouseButton == Crafty.mouseButtons.RIGHT) {
+				this.deconstruct();
 			}
 		});
 	},
@@ -72,6 +70,11 @@ Crafty.c('BuildingPlot', {
 		} else {
 			return 'fail';
 		}
+	},
+	
+	deconstruct: function() {
+		this.tooltip.deconstruct();
+		this.destroy();
 	}
 });
 

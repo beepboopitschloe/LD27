@@ -30,6 +30,12 @@ Buildings = {
 		{ type: 'House', wood: 10, food: 15, stone: 5 }
 		],
 	
+	benefitStrings: [
+		{ type: 'TestBuilding', str: 'It\'s pretty.' },
+		{ type: 'Farm', str: 'Produces 5 food every 3 days.' },
+		{ type: 'House', str: 'Adds 2 to your population.' }
+		],
+	
 	buildMenuList: [
 		'TestBuilding',
 		'Farm',
@@ -39,6 +45,10 @@ Buildings = {
 	
 	lookupCost: function(building) {
 		return this.costs[this.types.indexOf(building)];
+	},
+	
+	lookupBenefitString: function(building) {
+		return this.benefitStrings[this.types.indexOf(building)];
 	}
 }
 
@@ -48,11 +58,13 @@ PlayerVillage = {
 	
 	taskHandler: null,
 	
+	popHandler: null,
+	
 	resources: {
 		wood: 0,
 		food: 10,
 		stone: 0,
-		population: 1
+		population: 0
 	},
 	
 	updateResources: function(resourceType, number) {
@@ -96,11 +108,11 @@ MouseController = {
 Game = {
 	// width & height of the stage
 	width: function() {
-		return 2048;
+		return 1024;
 	},
 	
 	height: function() {
-		return 2048;
+		return 640;
 	},
 	
 	// width & height of the viewport
@@ -126,7 +138,7 @@ Game = {
 		// start up Crafty. Set the background color to an eye-searing violet.
 		Crafty.init(Game.width(), Game.height());
 		Crafty.viewport.init(Game.viewportWidth(), Game.viewportHeight());
-		Crafty.background('rgb(100,224,150)');
+		Crafty.background('rgb(50,25,100)');
 		
 		Crafty.scene("Loading");
 	}
