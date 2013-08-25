@@ -18,8 +18,19 @@ function replaceTile(toReplace, replacement, isoMap, destroyOriginal) {
 	destroyOriginal = typeof destroyOriginal !== 'undefined' ? destroyOriginal : true;
 	
 	// otherwise, run as normal.
-	isoMap.place(toReplace.tile_x, toReplace.tile_y, 0, replacement);
-	replacement.tileSetup([toReplace.tile_x, toReplace.tile_y]);
+	
+	/* OFFSET STUFF
+	offset = isoMap.px2pos(Crafty.viewport.x, Crafty.viewport.y);
+	console.log('offset: ' + offset.x + ', ' + offset.y);
+	console.log('orig: ' + toReplace.tile_x + ', ' + toReplace.tile_y);
+	tog = { x: toReplace.tile_x + offset.x, y: toReplace.tile_y + offset.y };
+	console.log('together: ' + tog.x + ', ' + tog.y);
+	*/
+	
+	offset = { x: 0, y: 0 };
+	
+	isoMap.place(toReplace.tile_x + offset.x, toReplace.tile_y + offset.y, 0, replacement);
+	replacement.tileSetup([toReplace.tile_x + offset.x, toReplace.tile_y + offset.y]);
 	replacement.setZusingY();
 	
 	if (destroyOriginal) {
@@ -27,4 +38,8 @@ function replaceTile(toReplace, replacement, isoMap, destroyOriginal) {
 	}
 	
 	return 'replaceTile: success';
+}
+
+function randomNumber(min, max) {
+	return (Math.floor(Math.random() * max) + min);
 }

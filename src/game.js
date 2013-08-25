@@ -10,9 +10,9 @@
 World = {
 	map: Crafty.isometric.size(64),
 	
-	map_width: function() { return 32; },
+	map_width: function() { return 16; },
 	
-	map_height: function() { return 32; },
+	map_height: function() { return 38; },
 	
 	map_tiles: []
 }
@@ -20,17 +20,20 @@ World = {
 Buildings = {
 	types: [
 		'TestBuilding',
-		'Farm'
+		'Farm',
+		'House'
 		],
 	
 	costs: [
-		{ wood: 10, food: 0, stone: 0 },
-		{ wood: 0, food: 10, stone: 0 }
+		{ type: 'TestBuilding', wood: 10, food: 0, stone: 0 },
+		{ type: 'Farm', wood: 0, food: 10, stone: 0 },
+		{ type: 'House', wood: 10, food: 15, stone: 5 }
 		],
 	
 	buildMenuList: [
 		'TestBuilding',
 		'Farm',
+		'House',
 		'Close'
 		],
 	
@@ -41,19 +44,26 @@ Buildings = {
 
 // an object to keep track of the player's village
 PlayerVillage = {
+	tasks: [],
+	
+	taskHandler: null,
+	
 	resources: {
 		wood: 0,
 		food: 10,
-		stone: 0
+		stone: 0,
+		population: 1
 	},
 	
 	updateResources: function(resourceType, number) {
-		console.log('updating ' + resourceType + " by " + number);
 		if (resourceType == 'wood') {
 			this.resources.wood  += number;
 		} else if (resourceType == 'food') {
 			this.resources.food += number;
-			console.log(this.resources.food + " food");
+		} else if (resourceType == 'stone') {
+			this.resources.stone += number;
+		} else if (resourceType == 'population') {
+			this.resources.population += number;
 		} else {
 			return;
 		}

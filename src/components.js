@@ -92,7 +92,7 @@ Crafty.c('Sky', {
 		Crafty.trigger('TimeIsDay');
 		this.state = 'day';
 		this.tween( {alpha: 0.0}, 1);
-		this.delay(this.cycle, 2000, -1);
+		this.delay(this.cycle, 5000, -1);
 	},
 	
 	cycle: function() {
@@ -132,6 +132,11 @@ Crafty.c('TileLogic', {
 	tileSetup: function(coords) {
 		this.tile_x = coords[0];
 		this.tile_y = coords[1];
+	},
+	
+	// this terribly-named function sets the z coordinate according to the building's y coordinate.
+	setZusingY: function() {
+		this.attr( { z: Math.floor(this.y/16) } );
 	}
 });
 
@@ -172,9 +177,6 @@ Crafty.c('Grass', {
 		
 		this.bind('MouseUp', function(e) {
 			if (this.mouseControlOn) {
-				if (e.mouseButton == Crafty.mouseButtons.LEFT) {
-					replaceTile(this, Crafty.e('BuildingPlot'), World.map);
-				}
 				if (e.mouseButton == Crafty.mouseButtons.RIGHT) {
 					// open the build menu
 					Crafty.e('BuildMenu').BuildMenu(this.tile_x, this.tile_y);
@@ -206,12 +208,13 @@ Crafty.c('NaturalResource', {
 				this.unbind('MouseOver');
 				
 				this.markedForHarvesting = true;
+				PlayerVillage.taskHandler.add(this);
 			}
 		});
 			
 		this.bind('TimeIsDay', function() {
 			if (this.markedForHarvesting) {
-				this.timeout(this.harvest, 1000);
+				//this.timeout(this.harvest, 1000);
 			}
 		});
 	}
@@ -220,7 +223,7 @@ Crafty.c('NaturalResource', {
 // tree tile
 Crafty.c('Tree', {
 	init: function() {
-		this.requires("NaturalResource, spr_tree");
+		this.requires('NaturalResource, spr_tree');
 		
 		this.areaMap(
 			[0, 47],
@@ -233,7 +236,27 @@ Crafty.c('Tree', {
 	
 	harvest: function() {
 		PlayerVillage.updateResources('wood', 10);
-		this.destroy();
+		replaceTile(this, Crafty.e('Grass'), World.map);
+	}
+});
+
+// stone tile
+Crafty.c('Stone', {
+	init: function() {
+		this.requires('NaturalResource, spr_stone');
+		
+		this.areaMap(
+			[0,48],
+			[32,32],
+			[64,48],
+			[32,64]
+			);
+		
+	},
+
+	harvest: function() {
+		PlayerVillage.updateResources('stone', 4);
+		replaceTile(this, Crafty.e('Grass'), World.map);
 	}
 });
 
@@ -255,18 +278,7 @@ Crafty.c('BuildingPlot', {
 			);
 		
 		// tell the plot to become a building during the day
-		this.bind('TimeIsDay', function() {
-			cost = Buildings.lookupCost(this.type);
-			if (PlayerVillage.resources.wood >= cost.wood
-				&& PlayerVillage.resources.food >= cost.food
-				&& PlayerVillage.resources.stone >= cost.stone) {
-				tile = Crafty.e(this.type);
-				replaceTile(this, tile, World.map);
-				PlayerVillage.updateResources('wood', -cost.wood);
-				PlayerVillage.updateResources('food', -cost.food);
-				PlayerVillage.updateResources('stone', -cost.stone);
-			}
-		});
+		this.bind('TimeIsDay', function() { PlayerVillage.taskHandler.add(this); } );
 		
 		this.bind('MouseOver', function() {
 			this.spawnInfoWindow();
@@ -292,10 +304,20 @@ Crafty.c('BuildingPlot', {
 		return this;
 	},
 	
-	// this terribly-named function sets the z coordinate according to the building's y coordinate.
-	setZusingY: function() {
-		this.attr( { z: Math.floor(this.y/16) } );
-		console.log(this.z);
+	build: function() {
+		cost = Buildings.lookupCost(this.type);
+		if (PlayerVillage.resources.wood >= cost.wood
+			&& PlayerVillage.resources.food >= cost.food
+			&& PlayerVillage.resources.stone >= cost.stone) {
+			tile = Crafty.e(this.type);
+			replaceTile(this, tile, World.map);
+			PlayerVillage.updateResources('wood', -cost.wood);
+			PlayerVillage.updateResources('food', -cost.food);
+			PlayerVillage.updateResources('stone', -cost.stone);
+			return 'success';
+		} else {
+			return 'fail';
+		}
 	},
 	
 	spawnInfoWindow: function() {
@@ -311,13 +333,13 @@ Crafty.c('BuildingPlot', {
 // farm building
 Crafty.c('Farm', {
 	init: function() {
-		this.requires('Building, ResourceBuilding, spr_farm');
+		this.requires('Building, ResourceProducer, spr_farm');
 		
-		//this.maxDaysUntilYield(3);
-		//this.daysUntilYield(3);
+		this.maxDaysUntilYield(3);
+		this.daysUntilYield(3);
 		this.yield(5);
 		
-		this.tooltip = null;
+		this.tooltipText = 'Farm: produces 5 food every 3 days';
 		
 		this.areaMap(
 				[0, 48],
@@ -328,13 +350,31 @@ Crafty.c('Farm', {
 	}
 });
 
+// house building
+Crafty.c('House', {
+	init: function() {
+		this.requires('Building, spr_house');
+		
+		this.areaMap(
+				[0, 48],
+				[32, 32],
+				[64, 48],
+				[32, 64]
+			);
+		
+		PlayerVillage.updateResources('population', 2);
+		this.tooltipText = 'House: adds to your population by 2';
+	}
+});
+
 // basic building component
 Crafty.c('Building', {
 	init: function() {
 		this.requires('2D, Canvas, NocturnalTile, Mouse');
 		
 		this.tooltip = null;
-
+		this.tooltipText = ' ';
+		
 		this.bind('MouseOver', function() {
 			this.spawnInfoWindow();
 		});
@@ -352,24 +392,20 @@ Crafty.c('Building', {
 		});
 	},
 	
-	// this terribly-named function sets the z coordinate according to the building's y coordinate.
-	setZusingY: function() {
-		this.attr( { z: Math.floor(this.y/16) } );
-		console.log(this.z);
-	},
-	
 	spawnInfoWindow: function() {
-		this.tooltip = Crafty.e('Tooltip');
+		this.tooltip = Crafty.e('Tooltip').setText(this.tooltipText);
 	},
 	
 	destroyInfoWindow: function() {
-		this.tooltip.deconstruct();
-		this.tooltip = null;
+		if (this.tooltip != null) {
+			this.tooltip.deconstruct();
+			this.tooltip = null;
+		}
 	}
 });
 
 // resource-producer component
-Crafty.c('ResourceBuilding', {
+Crafty.c('ResourceProducer', {
 	init: function() {
 		this._maxDaysUntilYield = 1;
 		this._daysUntilYield = 1;
@@ -442,5 +478,7 @@ Crafty.c('TestBuilding', {
 				[48, 49],
 				[32, 57]
 			);
+		
+		this.tooltipText = 'Test Building';
 	}
 });

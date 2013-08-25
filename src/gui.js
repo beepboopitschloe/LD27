@@ -35,7 +35,10 @@ Crafty.c('PlayerInfoText', {
 	},
 	
 	updateText: function() {
-		string = 'Wood: ' + PlayerVillage.resources.wood + ' --- Food: ' + PlayerVillage.resources.food;
+		string = 'Wood: ' + PlayerVillage.resources.wood
+		+ ' --- Food: ' + PlayerVillage.resources.food
+		+ ' --- Stone: ' + PlayerVillage.resources.stone
+		+ ' --- Population: ' + PlayerVillage.resources.population;
 		
 		this.text(string);
 	}
@@ -62,6 +65,7 @@ Crafty.c('GUI_Window', {
 	
 	setText: function(textIn) {
 		this.windowText.text(textIn);
+		return this;
 	},
 	
 	deconstruct: function() {
@@ -111,7 +115,8 @@ Crafty.c('BuildMenu', {
 		this.menuOptions = [
 				Crafty.e('BuildMenuOption').BuildMenuOption(this, 0, 'TestBuilding'),
 				Crafty.e('BuildMenuOption').BuildMenuOption(this, 1, 'Farm'),
-				Crafty.e('BuildMenuOption').BuildMenuOption(this, 2, 'Close')
+				Crafty.e('BuildMenuOption').BuildMenuOption(this, 2, 'House'),
+				Crafty.e('BuildMenuOption').BuildMenuOption(this, 3, 'Close')
 				]
 	},
 	
@@ -160,5 +165,32 @@ Crafty.c('BuildMenuOption', {
 		});
 		
 		return this;
+	}
+});
+
+// screen-scroller!
+Crafty.c('ScreenScroll', {
+	init: function() {
+		this.requires('Keyboard');
+		
+		this.bind('EnterFrame', function() {
+			if (this.isDown('W')) {
+				Crafty.viewport.scroll('_y', Crafty.viewport.y + 4);
+				Crafty.trigger('ViewportMovement',
+					{ x: Crafty.viewport.x, y: Crafty.viewport.y });
+			} else if (this.isDown('S')) {
+				Crafty.viewport.scroll('_y', Crafty.viewport.y - 4);
+				Crafty.trigger('ViewportMovement',
+					{ x: Crafty.viewport.x, y: Crafty.viewport.y });
+			} else if (this.isDown('A')) {
+				Crafty.viewport.scroll('_x', Crafty.viewport.x + 4);
+				Crafty.trigger('ViewportMovement',
+					{ x: Crafty.viewport.x, y: Crafty.viewport.y });
+			} else if (this.isDown('D')) {
+				Crafty.viewport.scroll('_x', Crafty.viewport.x - 4);
+				Crafty.trigger('ViewportMovement',
+					{ x: Crafty.viewport.x, y: Crafty.viewport.y });
+			}
+		});
 	}
 });
