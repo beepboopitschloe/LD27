@@ -16,14 +16,15 @@ Crafty.c('TaskHandler', {
 	
 	add: function(task) {
 		PlayerVillage.tasks.push(task);
-		PlayerVillage.tasks.reverse();
 	},
 	
 	performTasks: function() {
+		taskList = PlayerVillage.tasks.reverse();
+		PlayerVillage.tasks.reverse();
 		unfinishedTasks = [];
 		
 		for (var i = 0; i < PlayerVillage.resources.population; i++) {
-			task = PlayerVillage.tasks.pop();
+			task = taskList.pop();
 			if (task == 'undefined') {
 				continue;
 			}
@@ -32,6 +33,11 @@ Crafty.c('TaskHandler', {
 				task.harvest();
 			} else if (task.has('BuildingPlot')) {
 				if (task.build() == 'fail') {
+					unfinishedTasks.push(task);
+					i -= 1;
+				}
+			} else if (task.has('ResourceProducer')) {
+				if (task.yieldResources() == 'fail') {
 					unfinishedTasks.push(task);
 					i -= 1;
 				}

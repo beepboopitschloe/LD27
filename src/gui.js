@@ -77,16 +77,51 @@ Crafty.c('GUI_Window', {
 // a tooltip is a very tiny GUI_Window that is usually spawned by mouseovers.
 Crafty.c('Tooltip', {
 	init: function() {
-		this.requires('GUI_Window')
+		this.requires('2D, Mouse')
 			.attr( { x: Crafty.mousePos.x, y: Crafty.mousePos.y, w: 0, h: 0 } );
 		
-		this.setText('Test Tooltip');
-		this.windowText.attr( { x: this.x+4, y: this.y+4 } );
+		this.tooltipText = Crafty.e('2D, DOM, Text')
+			.attr( { x: this.x + 8, y: this.y - 16 } )
+			.css($tooltip_css);
 		
-		this.bind('EnterFrame', function(frameNumber) {
-			this.attr( { x: Crafty.mousePos.x, y: Crafty.mousePos.y } );
-			this.windowText.attr( { x: this.x+4, y: this.y+4 });
-		});
+		this.setText(' ');
+		
+		this.bindToMouse();
+	},
+	
+	attachToMouse: function(frameNumber) {
+		this.attr( { x: Crafty.mousePos.x, y: Crafty.mousePos.y } );
+		this.tooltipText.attr( { x: this.x + 8, y: this.y - 16 });
+	},
+	
+	bindToMouse: function() {
+		this.bind('EnterFrame', this.attachToMouse);
+	},
+	
+	unbindToMouse: function() {
+		this.unbind('EnterFrame', this.attachToMouse);
+	},
+	
+	show: function() {
+		this.tooltipText.visible = true;
+		this.bindToMouse();
+		return this;
+	},
+	
+	hide: function() {
+		this.tooltipText.visible = false;
+		this.unbindToMouse();
+		return this;
+	},
+	
+	setText: function(textIn) {
+		this.tooltipText.text(textIn);
+		return this;
+	},
+	
+	deconstruct: function() {
+		this.tooltipText.destroy();
+		this.destroy();
 	}
 });
 
@@ -137,7 +172,7 @@ Crafty.c('BuildMenu', {
 	
 	deconstruct: function() {
 		for (var x = 0; x < this.menuOptions.length; x++) {
-			this.menuOptions[x].destroy();
+			this.menuOptions[x].deconstruct();
 		}
 		
 		this.destroy();
@@ -160,11 +195,41 @@ Crafty.c('BuildMenuOption', {
 		
 		this.sprite(0, Buildings.buildMenuList.indexOf(this.name), 1, 1);
 		
+		this.tooltip = Crafty.e('Tooltip');
+		
+		if (this.name != 'Close') {
+			cost = Buildings.lookupCost(this.name);
+		
+			this.tooltip.setText(this.name + '\n'
+				+ '  Cost: '
+				+ cost.wood + ' wood, '
+				+ cost.food + ' food, '
+				+ cost.stone + ' stone');
+		} else {
+			this.tooltip.setText('Close the menu.');
+		}
+		this.tooltip.hide();
+		
+		this.bind('MouseOver', function() {
+			this.tooltip.show();
+		});
+		
+		this.bind('MouseOut', function() {
+			this.tooltip.hide();
+		});
+		
 		this.bind('MouseUp', function(e) {
 			this.parentMenu.select(this);
 		});
 		
+		cost = Buildings.lookupCost(this.name);
+		
 		return this;
+	},
+	
+	deconstruct: function() {
+		this.tooltip.deconstruct();
+		this.destroy();
 	}
 });
 
