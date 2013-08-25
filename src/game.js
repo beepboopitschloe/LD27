@@ -17,6 +17,51 @@ World = {
 	map_tiles: []
 }
 
+Buildings = {
+	types: [
+		'TestBuilding',
+		'Farm'
+		],
+	
+	costs: [
+		{ wood: 10, food: 0, stone: 0 },
+		{ wood: 0, food: 10, stone: 0 }
+		],
+	
+	buildMenuList: [
+		'TestBuilding',
+		'Farm',
+		'Close'
+		],
+	
+	lookupCost: function(building) {
+		return this.costs[this.types.indexOf(building)];
+	}
+}
+
+// an object to keep track of the player's village
+PlayerVillage = {
+	resources: {
+		wood: 0,
+		food: 10,
+		stone: 0
+	},
+	
+	updateResources: function(resourceType, number) {
+		console.log('updating ' + resourceType + " by " + number);
+		if (resourceType == 'wood') {
+			this.resources.wood  += number;
+		} else if (resourceType == 'food') {
+			this.resources.food += number;
+			console.log(this.resources.food + " food");
+		} else {
+			return;
+		}
+		
+		Crafty.trigger('PlayerResourcesUpdated');
+	}
+}
+
 // mouse controller
 MouseController = {
 	state: 'gameplay',

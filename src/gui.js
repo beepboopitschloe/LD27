@@ -21,6 +21,26 @@ Crafty.c('FPSText', {
 	}
 });
 
+// text which displays player resources
+Crafty.c('PlayerInfoText', {
+	init: function() {
+		this.requires('2D, DOM, Text')
+			.attr({ x: 4, y: Game.viewportHeight()-16 })
+			.css($text_css)
+			.text(' ');
+		
+		this.updateText();
+		
+		this.bind('PlayerResourcesUpdated', this.updateText);
+	},
+	
+	updateText: function() {
+		string = 'Wood: ' + PlayerVillage.resources.wood + ' --- Food: ' + PlayerVillage.resources.food;
+		
+		this.text(string);
+	}
+});
+
 // a basic GUI window
 Crafty.c('GUI_Window', {
 	init: function() {
@@ -66,13 +86,6 @@ Crafty.c('Tooltip', {
 	}
 });
 
-// this array is all build menu options. an option's index in the array is equal to
-// 		the index of its sprite in build_menu_options.gif. an option's value is equal
-//		to its building component.
-var build_options = [
-	'Building'
-];
-
 // this component is a drop-down menu for building something.
 Crafty.c('BuildMenu', {
 	init: function() {
@@ -95,10 +108,19 @@ Crafty.c('BuildMenu', {
 		
 		console.log(Game.sky_Z() + " " + Game.gui_Z());
 		
-		this.menuOptions = [Crafty.e('BuildMenuOption').BuildMenuOption(this, 'Building')]
+		this.menuOptions = [
+				Crafty.e('BuildMenuOption').BuildMenuOption(this, 0, 'TestBuilding'),
+				Crafty.e('BuildMenuOption').BuildMenuOption(this, 1, 'Farm'),
+				Crafty.e('BuildMenuOption').BuildMenuOption(this, 2, 'Close')
+				]
 	},
 	
 	select: function(option) {
+		if (option.name == 'Close') {
+			this.deconstruct();
+			return;
+		}
+	
 		building = Crafty.e('BuildingPlot').BuildingPlot(option.name);
 		
 		World.map.place(this.placeAtX, this.placeAtY, 0, building);
@@ -123,15 +145,15 @@ Crafty.c('BuildMenuOption', {
 		this.requires('2D, Canvas, opt_build_menu, Mouse');
 	},
 	
-	BuildMenuOption: function(parentMenu, name) {
+	BuildMenuOption: function(parentMenu, optionNumber, name) {
 		this.attr( {
 			x: parentMenu.x + 4,
-			y: parentMenu.y + 4,
+			y: parentMenu.y + 4 + (optionNumber*16),
 			z: parentMenu.z + 1,
 			name: name,
 			parentMenu: parentMenu } );
 		
-		this.sprite(0, build_options.indexOf(this.name), 1, 1);
+		this.sprite(0, Buildings.buildMenuList.indexOf(this.name), 1, 1);
 		
 		this.bind('MouseUp', function(e) {
 			this.parentMenu.select(this);

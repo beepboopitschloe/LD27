@@ -12,6 +12,8 @@ Crafty.scene('Game', function() {
 		.text("PRESS SPACE TO INITIATE THE DAY/NIGHT CYCLE")
 		.css($text_css);
 	
+	this.resourceText = Crafty.e('PlayerInfoText');
+	
 	var fps = Crafty.e('FPSText');
 	
 	var area = {
@@ -37,6 +39,8 @@ Crafty.scene('Game', function() {
 		}
 	}
 	
+	World.map.place(5, 5, 0, Crafty.e('Tree'));
+	
 	// set up the sky.
 	var sky = Crafty.e('Sky').attr({z: Game.height()/16 + 1});
 	// init mouse control
@@ -54,6 +58,7 @@ Crafty.scene('Loading', function() {
 	Crafty.load([
 		// terrain assets
 		'assets/grass.gif',
+		'assets/tree.gif',
 		
 		// building assets
 		'assets/building_plot.gif',
@@ -64,9 +69,11 @@ Crafty.scene('Loading', function() {
 		], function() {
 			// terrain assets
 			Crafty.sprite(64, 'assets/grass.gif', { spr_grass: [0,0] });
+			Crafty.sprite(64, 'assets/tree.gif', { spr_tree: [0,0] });
 			
 			// building assets
 			Crafty.sprite(64, 'assets/building_plot.gif', { spr_building_plot: [0,0] });
+			Crafty.sprite(64, 'assets/farm.gif', { spr_farm: [0, 0] });
 			Crafty.sprite(64, 'assets/sample_building_64.gif', { spr_building: [0,0] });
 			
 			// GUI assets

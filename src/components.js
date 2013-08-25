@@ -92,7 +92,7 @@ Crafty.c('Sky', {
 		Crafty.trigger('TimeIsDay');
 		this.state = 'day';
 		this.tween( {alpha: 0.0}, 1);
-		this.delay(this.cycle, 10000, -1);
+		this.delay(this.cycle, 2000, -1);
 	},
 	
 	cycle: function() {
@@ -184,6 +184,59 @@ Crafty.c('Grass', {
 	}
 });
 
+// generic component for harvestable resources
+Crafty.c('NaturalResource', {
+	init: function() {
+		this.requires("2D, Canvas, NocturnalTile, Mouse");
+		
+		this.markedForHarvesting = false;
+		
+		this.bind('MouseOver', function() {
+			this.sprite(0, 1, 1, 1);
+		});
+		
+		this.bind('MouseOut', function() {
+			this.sprite(0, 0, 1, 1);
+		});
+		
+		this.bind('MouseUp', function(e) {
+			if (this.mouseControlOn) {
+				this.sprite(0, 1, 1, 1);
+				this.unbind('MouseOut');
+				this.unbind('MouseOver');
+				
+				this.markedForHarvesting = true;
+			}
+		});
+			
+		this.bind('TimeIsDay', function() {
+			if (this.markedForHarvesting) {
+				this.timeout(this.harvest, 1000);
+			}
+		});
+	}
+});
+
+// tree tile
+Crafty.c('Tree', {
+	init: function() {
+		this.requires("NaturalResource, spr_tree");
+		
+		this.areaMap(
+			[0, 47],
+			[29, 24],
+			[34, 24],
+			[64, 47],
+			[32, 64]
+			);
+	},
+	
+	harvest: function() {
+		PlayerVillage.updateResources('wood', 10);
+		this.destroy();
+	}
+});
+
 // this is a building plot. It can be placed at night, and will be built during the day.
 Crafty.c('BuildingPlot', {
 	init: function() {
@@ -203,8 +256,16 @@ Crafty.c('BuildingPlot', {
 		
 		// tell the plot to become a building during the day
 		this.bind('TimeIsDay', function() {
-			tile = Crafty.e(this.type);
-			replaceTile(this, tile, World.map);
+			cost = Buildings.lookupCost(this.type);
+			if (PlayerVillage.resources.wood >= cost.wood
+				&& PlayerVillage.resources.food >= cost.food
+				&& PlayerVillage.resources.stone >= cost.stone) {
+				tile = Crafty.e(this.type);
+				replaceTile(this, tile, World.map);
+				PlayerVillage.updateResources('wood', -cost.wood);
+				PlayerVillage.updateResources('food', -cost.food);
+				PlayerVillage.updateResources('stone', -cost.stone);
+			}
 		});
 		
 		this.bind('MouseOver', function() {
@@ -247,22 +308,33 @@ Crafty.c('BuildingPlot', {
 	}
 });
 
-// test building
-Crafty.c('Building', {
+// farm building
+Crafty.c('Farm', {
 	init: function() {
-		this.requires('2D, Canvas, NocturnalTile, Mouse, spr_building');
+		this.requires('Building, ResourceBuilding, spr_farm');
+		
+		//this.maxDaysUntilYield(3);
+		//this.daysUntilYield(3);
+		this.yield(5);
 		
 		this.tooltip = null;
 		
 		this.areaMap(
-				[17, 49],
-				[17, 25],
-				[32, 17],
-				[48, 25],
-				[48, 49],
-				[32, 57]
+				[0, 48],
+				[32, 32],
+				[64, 48],
+				[32, 64]
 			);
+	}
+});
+
+// basic building component
+Crafty.c('Building', {
+	init: function() {
+		this.requires('2D, Canvas, NocturnalTile, Mouse');
 		
+		this.tooltip = null;
+
 		this.bind('MouseOver', function() {
 			this.spawnInfoWindow();
 		});
@@ -293,5 +365,82 @@ Crafty.c('Building', {
 	destroyInfoWindow: function() {
 		this.tooltip.deconstruct();
 		this.tooltip = null;
+	}
+});
+
+// resource-producer component
+Crafty.c('ResourceBuilding', {
+	init: function() {
+		this._maxDaysUntilYield = 1;
+		this._daysUntilYield = 1;
+		this._type = 'food';
+		this._yield = 1;
+		
+		this.bind('TimeIsDay', this.dailyUpdate);
+	},
+	
+	maxDaysUntilYield: function(num) {
+		if (typeof num !== 'undefined') {
+			this._maxDaysUntilYield = num;
+		} else {
+			return this._maxDaysUntilYield;
+		}
+	},
+	
+	daysUntilYield: function(num) {
+		if (typeof num !== 'undefined') {
+			this._daysUntilYield = num;
+		} else {
+			return this._daysUntilYield;
+		}
+	},
+	
+	resourceType: function(str) {
+		console.log('changing type to ' + str);
+		if (typeof str !== 'undefined') {
+			this._type = str;
+		} else {
+			return this._type;
+		}
+	},
+	
+	yield: function(num) {
+		if(typeof num !== 'undefined') {
+			this._yield = num;
+		} else {
+			return this._yield;
+		}
+	},
+	
+	dailyUpdate: function() {
+		console.log(this._daysUntilYield + " days until yield");
+		if (this._daysUntilYield > 0) {
+			this._daysUntilYield -= 1;
+			return;
+		} else {
+			this.yieldResources();
+			this._daysUntilYield = this._maxDaysUntilYield;
+		}
+	},
+	
+	yieldResources: function() {
+		console.log('Yielded ' + this._yield + " " + this._type);
+		PlayerVillage.updateResources(this._type, this._yield);
+	}
+});
+
+// test building
+Crafty.c('TestBuilding', {
+	init: function() {
+		this.requires('Building, spr_building');
+		
+		this.areaMap(
+				[17, 49],
+				[17, 25],
+				[32, 17],
+				[48, 25],
+				[48, 49],
+				[32, 57]
+			);
 	}
 });
