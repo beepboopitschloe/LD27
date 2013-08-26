@@ -342,7 +342,7 @@ Crafty.c('Tree', {
 		
 		this.setTypeAndAmount('wood', 10);
 		
-		this.setTooltipText('Tree - harvest this for 5 wood');
+		this.setTooltipText('Tree - harvest this for 10 wood');
 		
 		this.areaMap(
 			[0, 47],
@@ -361,7 +361,7 @@ Crafty.c('Stone', {
 		
 		this.setTypeAndAmount('stone', 5);
 		
-		this.setTooltipText('Rock - harvest this for 2 stone');
+		this.setTooltipText('Rock - harvest this for 5 stone');
 		
 		this.areaMap(
 			[0,48],
