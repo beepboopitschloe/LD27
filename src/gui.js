@@ -220,8 +220,9 @@ Crafty.c('BuildMenu', {
 		this.menuOptions = [
 				Crafty.e('BuildMenuOption').BuildMenuOption(this, 0, 'TestBuilding'),
 				Crafty.e('BuildMenuOption').BuildMenuOption(this, 1, 'Farm'),
-				Crafty.e('BuildMenuOption').BuildMenuOption(this, 2, 'House'),
-				Crafty.e('BuildMenuOption').BuildMenuOption(this, 3, 'Close')
+				Crafty.e('BuildMenuOption').BuildMenuOption(this, 2, 'Granary'),
+				Crafty.e('BuildMenuOption').BuildMenuOption(this, 3, 'House'),
+				Crafty.e('BuildMenuOption').BuildMenuOption(this, 4, 'Close')
 				]
 	},
 	

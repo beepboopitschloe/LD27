@@ -116,7 +116,19 @@ Crafty.c('Sky', {
 // tile logic component
 Crafty.c('TileLogic', {
 	init: function() {
+		this.requires('Mouse');
+		
+		this.tile_x = null;
+		this.tile_y = null;
+		this.neighbors = [];
+		
 		this.mouseControlOn = true;
+		
+		this.bind('MouseUp', function(e) {
+			if (this.mouseControlOn) {
+				Crafty.trigger('TileClicked', { tile: this, mouse: e });
+			}
+		});
 	},
 	
 	// enable/disable mouse controls
@@ -132,6 +144,69 @@ Crafty.c('TileLogic', {
 	tileSetup: function(coords) {
 		this.tile_x = coords[0];
 		this.tile_y = coords[1];
+		
+		World.map_tiles[this.tile_x][this.tile_y] = this;
+	},
+	
+	setupNeighbors: function() {
+		// set up the list of tile neighbors
+		/* LOOPING METHOD
+		for (var x = this.tile_x - 1; x <= this.tile_x; x++) {
+			for (var y = this.tile_y - 1; y <= this.tile_y + 2; y++) {
+				// don't check tiles that shoudn't be neighbors
+				if (y == this.tile_y) continue;
+				if (x == this.tile_x - 1 && y == this.tile_y + 2) continue;
+				if (x == this.tile_x - 1 && y == this.tile_y - 2) continue;
+				
+				console.log(this.tile_x + ', ' + this.tile_y + ' checking for neighbor at '
+					+ x + ', ' + y);
+				// don't put self in neighbors list, or check negative tiles
+				if (x < 0 || y < 0
+						|| x > World.map_width() || y > World.map_height()) {
+					continue;
+				} else {
+					this.neighbors.push(World.map_tiles[x][y]);
+					console.log('neighbor added to ' + this.tile_x + ', ' + this.tile_y);
+				}
+			}
+		} */
+		
+		// SPECIAL CASE METHOD
+		x = this.tile_x;
+		y = this.tile_y;
+		
+		if (y % 2 == 1) {
+			this.addToNeighbors(x-1, y);
+			this.addToNeighbors(x, y-2);
+			this.addToNeighbors(x, y-1);
+			this.addToNeighbors(x, y+1);
+			this.addToNeighbors(x, y+2);
+			this.addToNeighbors(x+1, y-1);
+			this.addToNeighbors(x+1, y);
+			this.addToNeighbors(x+1, y+1);
+		} else {
+			this.addToNeighbors(x-1, y-1);
+			this.addToNeighbors(x-1, y);
+			this.addToNeighbors(x-1, y+1);
+			this.addToNeighbors(x, y-2);
+			this.addToNeighbors(x, y-1);
+			this.addToNeighbors(x, y+1);
+			this.addToNeighbors(x, y+2);
+			this.addToNeighbors(x+1,y);
+		}
+		
+		this.trigger('NeighborsUpdated');
+	},
+	
+	addToNeighbors: function(x, y) {
+		if (x >= 0 && y >= 0 && x < World.map_width() && y < World.map_height())
+			this.neighbors.push(World.map_tiles[x][y]);
+	},
+	
+	updateNeighbors: function() {
+		this.neighbors = [];
+		
+		this.setupNeighbors();
 	},
 	
 	// this terribly-named function sets the z coordinate according to the building's y coordinate.
@@ -158,7 +233,7 @@ Crafty.c('NocturnalTile', {
 // grass tile
 Crafty.c('Grass', {
 	init: function() {
-		this.requires("2D, Canvas, NocturnalTile, Mouse, spr_grass");
+		this.requires("2D, Canvas, NocturnalTile, spr_grass");
 		
 		this.areaMap(
 			[0,48],
@@ -167,27 +242,28 @@ Crafty.c('Grass', {
 			[32,64]
 			);
 		
-		this.bind('MouseOver', function() {
-			this.sprite(0, 1, 1, 1);
-		});
+		this.bind('MouseOver', this.highlight);
 		
-		this.bind('MouseOut', function() {
-			this.sprite(0, 0, 1, 1);
-		});
-		
-		this.bind('MouseUp', function(e) {
-			if (this.mouseControlOn) {
-				// open the build menu
-				Crafty.e('BuildMenu').BuildMenu(this.tile_x, this.tile_y);
-			}
-		});
+		this.bind('MouseOut', this.dehighlight);
+	},
+	
+	highlight: function() {
+		this.sprite(0, 1, 1, 1);
+	},
+	
+	dehighlight: function() {
+		this.sprite(0, 0, 1, 1);
+	},
+	
+	deconstruct: function() {
+		this.destroy();
 	}
 });
 
 // generic component for harvestable resources
 Crafty.c('NaturalResource', {
 	init: function() {
-		this.requires("2D, Canvas, NocturnalTile, Mouse");
+		this.requires("2D, Canvas, NocturnalTile");
 		
 		this.markedForHarvesting = false;
 		this._type = 'food';
@@ -251,6 +327,11 @@ Crafty.c('NaturalResource', {
 		Crafty.e('FloatingInfoText').FloatingInfoText(this._x, this._y,
 				this._amount + ' ' + this._type + ' harvested');
 		replaceTile(this, Crafty.e('Grass'), World.map);
+	},
+	
+	deconstruct: function() {
+		this.tooltip.deconstruct();
+		this.destroy();
 	}
 });
 
@@ -337,6 +418,8 @@ Crafty.c('ResourceProducer', {
 		this._daysUntilYield = 1;
 		this._type = 'food';
 		this._full = false;
+		this._producing = true;
+		this._requiresHarvest = true;
 		this._yield = 1;
 		
 		this.bind('TimeIsDay', this.dailyUpdate);
@@ -375,27 +458,119 @@ Crafty.c('ResourceProducer', {
 		}
 	},
 	
-	dailyUpdate: function() {
-		console.log(this._daysUntilYield + " days until yield");
-		if (this._daysUntilYield > 0 && this._full == false) {
-			this._daysUntilYield -= 1;
-			return;
+	toggleProducing: function() {
+		if (this._producing) {
+			this._producing = false;
 		} else {
-			if (this._full == false) {
-				this._full = true;
-				PlayerVillage.taskHandler.add(this);
-				this._daysUntilYield = this._maxDaysUntilYield;
+			this._producing = true;
+		}
+		
+		return this._producing;
+	},
+	
+	requiresHarvest: function(boolIn) {
+		this._requiresHarvest = boolIn;
+	},
+	
+	dailyUpdate: function() {
+		if (this._producing) {
+			if (this._daysUntilYield > 0 && this._full == false) {
+				this._daysUntilYield -= 1;
+				return;
+			} else {
+				if (this._requiresHarvest) {
+					if (this._full == false) {
+						this._full = true;
+						PlayerVillage.taskHandler.add(this);
+					}
+				} else {
+					this.yieldResources();
+				}
 			}
 		}
 	},
 	
 	yieldResources: function() {
-		console.log('Yielded ' + this._yield + " " + this._type);
 		PlayerVillage.updateResources(this._type, this._yield);
 		this._full = false;
+		this._daysUntilYield = this._maxDaysUntilYield;
 		
-		Crafty.e('FloatingInfoText').FloatingInfoText(this._x, this._y, 'harvested');
+		Crafty.e('FloatingInfoText').FloatingInfoText(this._x, this._y,
+			'yielded ' + this._yield + ' ' + this._type);
+		
+		this.trigger('YieldedResources');
 		
 		return 'success';
+	}
+});
+
+// a tile that requires information about other tiles to fulfill a condition.
+Crafty.c('TileDependent', {
+	init: function() {
+		this.requires('TileLogic');
+		
+		this.tilesMeetingConditions = [];
+		
+		this._conditions = {
+			cond: [],
+			hasCondition: function(condition) {
+				for (var i = 0; i < this.cond.length; i++) {
+					if (this.cond[i] == condition)
+						return true;
+				}
+				
+				return false;
+			},
+			appendConditions: function(arrayIn) {
+				for (var i = 0; i < arrayIn.length; i++) {
+					if (this.cond.indexOf(arrayIn[i]) == -1) {
+						this.cond.push(arrayIn[i]);
+					}
+				}
+			},
+			setConditions: function(arrayIn) {
+				this.cond = arrayIn;
+			},
+			removeConditions: function(arrayIn) {
+				for (var i = 0; i < arrayIn.length; i++) {
+					index = this.cond.indexOf(arrayIn[i]);
+					if (index != -1) {
+						this.cond.splice(index-1, 1);
+					}
+				}
+			}
+		}
+		
+		this.bind('TimeIsDay', this.checkConditions)
+		this.bind('NeighborsUpdated', this.checkConditions);
+	},
+	
+	setConditions: function(arrayIn) {
+		this._conditions.setConditions(arrayIn);
+	},
+	
+	addConditions: function(arrayIn) {
+		this._conditions.appendConditions(arrayIn);
+	},
+	
+	removeConditions: function(arrayIn) {
+		this._conditions.removeConditions(arrayIn);
+	},
+	
+	checkConditions: function() {
+		this.tilesMeetingConditions = [];
+		
+		for (var i = 0; i < this.neighbors.length; i++) {
+			tile = this.neighbors[i];
+			if (this._conditions.hasCondition('isFarm'))
+				if (tile.has('Farm'))
+					this.tilesMeetingConditions.push(tile);
+			if (this._conditions.hasCondition('isStone'))
+				if (tile.has('Stone'))
+					this.tilesMeetingConditions.push(tile);
+		}
+		
+		this.trigger('UpdatedConditions');
+		return this.tilesMeetingConditions;
 	}
 });

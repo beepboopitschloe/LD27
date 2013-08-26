@@ -21,24 +21,28 @@ Buildings = {
 	types: [
 		'TestBuilding',
 		'Farm',
+		'Granary',
 		'House'
 		],
 	
 	costs: [
 		{ type: 'TestBuilding', wood: 10, food: 0, stone: 0 },
 		{ type: 'Farm', wood: 0, food: 10, stone: 0 },
+		{ type: 'Granary', wood: 15, food: 10, stone: 10 },
 		{ type: 'House', wood: 10, food: 15, stone: 5 }
 		],
 	
 	benefitStrings: [
 		{ type: 'TestBuilding', str: 'It\'s pretty.' },
 		{ type: 'Farm', str: 'Produces 5 food every 3 days.' },
+		{ type: 'Granary', str: 'Produces 1 food per neighboring farm every 3 days.' },
 		{ type: 'House', str: 'Adds 2 to your population.' }
 		],
 	
 	buildMenuList: [
 		'TestBuilding',
 		'Farm',
+		'Granary',
 		'House',
 		'Close'
 		],
@@ -84,26 +88,6 @@ PlayerVillage = {
 	}
 }
 
-// mouse controller
-MouseController = {
-	state: 'gameplay',
-	
-	possibleStates: [
-		'gameplay',	// when the mouse is being used for gameplay purposes ex. selecting tiles
-
-		'gui'		// when the mouse is being used for gui elements ex. menus
-	],
-	
-	changeState: function(stateIn) {
-		if (this.possibleStates.indexOf(stateIn) == -1) {
-			console.log('Failed to change mouse state: state not extant');
-			return;
-		} else {
-			this.state = stateIn;
-		}
-	}
-}
-
 // the Game object begins the game.
 Game = {
 	// width & height of the stage
@@ -133,6 +117,9 @@ Game = {
 		return Game.sky_Z() + 1;
 	},
 	
+	// mouse controller
+	mouseHandler: null,
+	
 	// init function
 	start: function() {
 		// start up Crafty. Set the background color to an eye-searing violet.
@@ -147,3 +134,5 @@ Game = {
 $text_css = { 'font-size': '24px', 'font-family': 'Arial', 'color': 'white', 'text-align': 'center', 'white-space': 'nowrap' }
 $tooltip_css = { 'font-size': '24px', 'font-family': 'Arial', 'color': 'white', 'text-align': 'center',
 	'white-space': 'nowrap' }
+$lose_css = { 'font-size': '32px', 'font-family': 'Arial', 'color': 'red', 'style': 'bold', 'text-align': 'center', 'white-space': 'nowrap' }
+$win_css = { 'font-size': '32px', 'font-family': 'Arial', 'color': 'lime', 'style': 'bold', 'text-align': 'center', 'white-space': 'nowrap' }

@@ -9,7 +9,7 @@
 Crafty.scene('Game', function() {
 	this.debugText = Crafty.e('2D, DOM, Text')
 		.attr({ x: 4, y: 4 } )
-		.text("PRESS SPACE TO INITIATE THE DAY/NIGHT CYCLE")
+		.text("PRESS SPACE TO INITIATE THE 10sec DAY/NIGHT CYCLE :: CAN YOU REACH 100 POPULATION?")
 		.css($text_css)
 		.bind('ViewportMovement', function(coords) {
 			this.attr( { x: -coords.x + 4, y: -coords.y + 4 } );
@@ -24,6 +24,7 @@ Crafty.scene('Game', function() {
 	
 	// set up invisible controllers
 	//var screenControl = Crafty.e('ScreenScroll'); BROKEN
+	Game.mouseHandler = Crafty.e('MouseHandler');
 	PlayerVillage.taskHandler = Crafty.e('TaskHandler');
 	PlayerVillage.popHandler = Crafty.e('PopHandler');
 	
@@ -64,6 +65,13 @@ Crafty.scene('Game', function() {
 		}
 	}
 	
+	// loop through again and set up tile neighbors
+	for (var x = area.x.start; x < area.x.end; x++) {
+		for (var y = area.y.start; y < area.y.end; y++) {
+			World.map_tiles[x][y].setupNeighbors();
+		}
+	}
+	
 	// set up the sky.
 	var sky = Crafty.e('Sky').attr({z: Game.height()/16 + 1});
 	// init mouse control
@@ -89,6 +97,7 @@ Crafty.scene('Loading', function() {
 		'assets/building_plot.gif',
 		'assets/farm.gif',
 		'assets/house.gif',
+		'assets/granary.gif',
 		'assets/sample_building_64.gif',
 		
 		// GUI assets
@@ -104,6 +113,7 @@ Crafty.scene('Loading', function() {
 			Crafty.sprite(64, 'assets/building_plot.gif', { spr_building_plot: [0,0] });
 			Crafty.sprite(64, 'assets/farm.gif', { spr_farm: [0,0] });
 			Crafty.sprite(64, 'assets/house.gif', { spr_house: [0,0] });
+			Crafty.sprite(64, 'assets/granary.gif', { spr_granary: [0,0] });
 			Crafty.sprite(64, 'assets/sample_building_64.gif', { spr_building: [0,0] });
 			
 			// GUI assets
@@ -122,5 +132,14 @@ Crafty.scene('Lose', function() {
 			x: Game.viewportWidth()/4,
 			y: Game.viewportHeight()/4 } )
 			.text(" YOU LOSE, PRESS REFRESH TO TRY AGAIN ")
-			.css($text_css);
+			.css($lose_css);
+});
+
+Crafty.scene('Lose', function() {
+	this.failureText = Crafty.e('2D, DOM, Text')
+		.attr( {
+			x: Game.viewportWidth()/4,
+			y: Game.viewportHeight()/4 } )
+			.text(" A WINNER IS YOU ")
+			.css($win_css);
 });

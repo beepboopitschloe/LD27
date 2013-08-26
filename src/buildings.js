@@ -13,11 +13,16 @@ Crafty.c('Building', {
 		
 		this.bind('MouseUp', function(e) {
 			if (e.mouseButton == Crafty.mouseButtons.LEFT) {
-				coords = World.map.px2pos(Crafty.mousePos.x, Crafty.mousePos.y);
+				//coords = {x: this.tile_x, y: this.tile_y};
 				
-				console.log('coords: ' + coords.x + ', ' + coords.y);
+				//console.log('coords: ' + coords.x + ', ' + coords.y);
 			}
 		});
+	},
+	
+	deconstruct: function() {
+		this.tooltip.deconstruct();
+		this.destroy();
 	}
 });
 
@@ -83,6 +88,8 @@ Crafty.c('Farm', {
 	init: function() {
 		this.requires('Building, ResourceProducer, spr_farm');
 		
+		this.name = 'farm';
+		
 		this.maxDaysUntilYield(3);
 		this.daysUntilYield(3);
 		this.yield(5);
@@ -95,6 +102,41 @@ Crafty.c('Farm', {
 				[64, 48],
 				[32, 64]
 			);
+	}
+});
+
+// granary building
+Crafty.c('Granary', {
+	init: function() {
+		this.requires('Building, TileDependent, ResourceProducer, spr_granary');
+		
+		this.areaMap(
+				[0, 48],
+				[32, 32],
+				[64, 48],
+				[32, 64]
+			);
+		
+		this.yield(0);
+		this.maxDaysUntilYield(0);
+		this.daysUntilYield(100);
+		
+		this.setConditions(['isFarm']);
+		this.bind('UpdatedConditions', this.alterFarmProduction);
+		
+		this.bind('YieldedResources', function() {
+			console.log('granary yielded');
+		});
+		
+		this.tooltip.setText('Granary: produces 1 food per neighboring farm every 3 days.');
+	},
+	
+	alterFarmProduction: function() {
+		numFarms = this.tilesMeetingConditions.length;
+		
+		this.yield(numFarms);
+		this.maxDaysUntilYield(1);
+		this.daysUntilYield(1);
 	}
 });
 

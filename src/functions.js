@@ -31,10 +31,14 @@ function replaceTile(toReplace, replacement, isoMap, destroyOriginal) {
 	
 	isoMap.place(toReplace.tile_x + offset.x, toReplace.tile_y + offset.y, 0, replacement);
 	replacement.tileSetup([toReplace.tile_x + offset.x, toReplace.tile_y + offset.y]);
+	replacement.updateNeighbors();
+	for (var i = 0; i < replacement.neighbors.length; i++) {
+		replacement.neighbors[i].updateNeighbors();
+	}
 	replacement.setZusingY();
 	
 	if (destroyOriginal) {
-		toReplace.destroy();
+		toReplace.deconstruct();
 	}
 	
 	return 'replaceTile: success';
