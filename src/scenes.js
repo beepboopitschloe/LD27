@@ -76,6 +76,9 @@ Crafty.scene('Game', function() {
 	var sky = Crafty.e('Sky').attr({z: Game.height()/16 + 1});
 	// init mouse control
 	//var mouseController = Crafty.e('MouseController');
+	
+	// play music
+	Crafty.audio.play('game_music', -1);
 });
 
 Crafty.scene('Loading', function() {
@@ -101,7 +104,17 @@ Crafty.scene('Loading', function() {
 		'assets/sample_building_64.gif',
 		
 		// GUI assets
-		'assets/build_menu_options.gif'
+		'assets/build_menu_options.gif',
+		
+		// music assets
+		'assets/game.mp3',
+		'assets/game.ogg',
+		'assets/game.aac',
+		
+		// sound assets
+		'assets/built.mp3',
+		'assets/built.ogg',
+		'assets/built.aac'
 		], function() {
 			// terrain assets
 			Crafty.sprite(64, 'assets/grass.gif', { spr_grass: [0,0] });
@@ -120,6 +133,20 @@ Crafty.scene('Loading', function() {
 			Crafty.sprite(128, 16, 'assets/build_menu_options.gif', {
 					opt_build_menu: [0, 0]
 				});
+			
+			// music assets
+			Crafty.audio.add( {
+				game_music: [
+					'assets/game.mp3',
+					'assets/game.ogg',
+					'assets/game.aac'
+					],
+				building_built: [
+					'assets/built.mp3',
+					'assets/built.ogg',
+					'assets/built.aac'
+					]
+			});
 			
 			// enter game scene
 			Crafty.scene("Game");

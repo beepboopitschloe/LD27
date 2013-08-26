@@ -71,6 +71,9 @@ Crafty.c('BuildingPlot', {
 			PlayerVillage.updateResources('wood', -cost.wood);
 			PlayerVillage.updateResources('food', -cost.food);
 			PlayerVillage.updateResources('stone', -cost.stone);
+			
+			Crafty.audio.play('building_built');
+			
 			return 'success';
 		} else {
 			return 'fail';
