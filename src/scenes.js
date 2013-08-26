@@ -162,7 +162,7 @@ Crafty.scene('Lose', function() {
 			.css($lose_css);
 });
 
-Crafty.scene('Lose', function() {
+Crafty.scene('Win', function() {
 	this.failureText = Crafty.e('2D, DOM, Text')
 		.attr( {
 			x: Game.viewportWidth()/4,
