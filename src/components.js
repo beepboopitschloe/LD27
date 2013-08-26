@@ -340,7 +340,7 @@ Crafty.c('Tree', {
 	init: function() {
 		this.requires('NaturalResource, HasTooltip, spr_tree');
 		
-		this.setTypeAndAmount('wood', 5);
+		this.setTypeAndAmount('wood', 10);
 		
 		this.setTooltipText('Tree - harvest this for 5 wood');
 		
@@ -359,7 +359,7 @@ Crafty.c('Stone', {
 	init: function() {
 		this.requires('NaturalResource, HasTooltip, spr_stone');
 		
-		this.setTypeAndAmount('stone', 4);
+		this.setTypeAndAmount('stone', 5);
 		
 		this.setTooltipText('Rock - harvest this for 2 stone');
 		
