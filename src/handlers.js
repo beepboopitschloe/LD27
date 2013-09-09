@@ -97,7 +97,7 @@ Crafty.c('PopHandler', {
 	},
 	
 	handlePop: function() {
-		foodPerPerson = 0; // DEBUG VALUE - ORIGINAL VALUE = 2
+		foodPerPerson = 2; // DEBUG VALUE = 0 - ORIGINAL VALUE = 2
 		foodNeeds = PlayerVillage.resources.population*foodPerPerson;
 
 		if (PlayerVillage.resources.food >= foodNeeds) {
