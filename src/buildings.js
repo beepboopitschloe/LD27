@@ -11,6 +11,8 @@ Crafty.c('Building', {
 	init: function() {
 		this.requires('2D, Canvas, NocturnalTile, HasTooltip, Mouse');
 		
+		this.buildRequirements = [ ];
+		
 		this.bind('MouseUp', function(e) {
 			if (e.mouseButton == Crafty.mouseButtons.LEFT) {
 				//coords = {x: this.tile_x, y: this.tile_y};
@@ -108,6 +110,29 @@ Crafty.c('Farm', {
 	}
 });
 
+// mining camp
+Crafty.c('Mining Camp', {
+	init: function() {
+		this.requires('Building, ResourceProducer, spr_miningcamp');
+		
+		this.name = 'MiningCamp';
+		
+		this.maxDaysUntilYield(3);
+		this.daysUntilYield(3);
+		this.resourceType('stone');
+		this.yield(5);
+		
+		this.tooltip.setText('Mining Camp: produces 5 stone every 3 days');
+		
+		this.areaMap(
+				[0, 48],
+				[32, 32],
+				[64, 48],
+				[32, 64]
+			);
+	}
+});
+
 // granary building
 Crafty.c('Granary', {
 	init: function() {
@@ -120,9 +145,11 @@ Crafty.c('Granary', {
 				[32, 64]
 			);
 		
+		this.name = 'granary';
+		
 		this.yield(0);
-		this.maxDaysUntilYield(0);
-		this.daysUntilYield(100);
+		this.maxDaysUntilYield(3);
+		this.daysUntilYield(3);
 		
 		this.setConditions(['isFarm']);
 		this.bind('UpdatedConditions', this.alterFarmProduction);
@@ -131,15 +158,13 @@ Crafty.c('Granary', {
 			console.log('granary yielded');
 		});
 		
-		this.tooltip.setText('Granary: produces 1 food per neighboring farm every 3 days.');
+		this.tooltip.setText('Granary: produces 2 food per neighboring farm every 3 days.');
 	},
 	
 	alterFarmProduction: function() {
 		numFarms = this.tilesMeetingConditions.length;
 		
-		this.yield(numFarms);
-		this.maxDaysUntilYield(1);
-		this.daysUntilYield(1);
+		this.yield(numFarms*2);
 	}
 });
 

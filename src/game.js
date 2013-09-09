@@ -14,13 +14,16 @@ World = {
 	
 	map_height: function() { return 38; },
 	
-	map_tiles: []
+	map_tiles: [],
+	
+	debug: true // toggle whether debug messages are on or off
 }
 
 Buildings = {
 	types: [
 		'TestBuilding',
 		'Farm',
+		'Mining Camp',
 		'Granary',
 		'House'
 		],
@@ -28,6 +31,7 @@ Buildings = {
 	costs: [
 		{ type: 'TestBuilding', wood: 10, food: 0, stone: 0 },
 		{ type: 'Farm', wood: 0, food: 10, stone: 0 },
+		{ type: 'Mining Camp', wood: 10, food: 5, stone: 0 },
 		{ type: 'Granary', wood: 15, food: 10, stone: 10 },
 		{ type: 'House', wood: 10, food: 15, stone: 5 }
 		],
@@ -35,7 +39,8 @@ Buildings = {
 	benefitStrings: [
 		{ type: 'TestBuilding', str: 'It\'s pretty.' },
 		{ type: 'Farm', str: 'Produces 5 food every 3 days.' },
-		{ type: 'Granary', str: 'Produces 1 food per neighboring farm every 3 days.' },
+		{ type: 'Mining Camp', str: 'Produces 5 stone every 3 days. Can only be built on stone fields.'},
+		{ type: 'Granary', str: 'Produces 2 food per neighboring farm every 3 days.' },
 		{ type: 'House', str: 'Adds 2 to your population.' }
 		],
 	
@@ -44,8 +49,16 @@ Buildings = {
 		'Farm',
 		'Granary',
 		'House',
-		'Close'
+		'Mining Camp'
 		],
+	
+	getOptionSpriteNumber: function(building) {
+		if (building != 'Close') {
+			return this.buildMenuList.indexOf(building) + 1;
+		} else {
+			return 0;
+		}
+	},
 	
 	lookupCost: function(building) {
 		return this.costs[this.types.indexOf(building)];
@@ -65,9 +78,9 @@ PlayerVillage = {
 	popHandler: null,
 	
 	resources: {
-		wood: 0,
+		wood: 5,
 		food: 10,
-		stone: 0,
+		stone: 5,
 		population: 0
 	},
 	

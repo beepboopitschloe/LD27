@@ -30,10 +30,10 @@ Crafty.scene('Game', function() {
 	
 	var area = {
 		x: {
-			start: 0,
+			start: -4,
 			end: World.map_width() },
 		y: {
-			start: 0,
+			start: -4,
 			end: World.map_height() }
 		};
 	
@@ -92,6 +92,9 @@ Crafty.scene('Loading', function() {
 	Crafty.load([
 		// terrain assets
 		'assets/grass.gif',
+		'assets/stonefield.gif',
+		
+		// resource assets
 		'assets/tree.gif',
 		'assets/stone.gif',
 		'assets/berry_bush.gif',
@@ -99,6 +102,7 @@ Crafty.scene('Loading', function() {
 		// building assets
 		'assets/building_plot.gif',
 		'assets/farm.gif',
+		'assets/miningcamp.gif',
 		'assets/house.gif',
 		'assets/granary.gif',
 		'assets/sample_building_64.gif',
@@ -118,6 +122,9 @@ Crafty.scene('Loading', function() {
 		], function() {
 			// terrain assets
 			Crafty.sprite(64, 'assets/grass.gif', { spr_grass: [0,0] });
+			Crafty.sprite(64, 'assets/stonefield.gif', { spr_stonefield: [0,0] });
+			
+			// resource assets
 			Crafty.sprite(64, 'assets/tree.gif', { spr_tree: [0,0] });
 			Crafty.sprite(64, 'assets/stone.gif', { spr_stone: [0,0] });
 			Crafty.sprite(64, 'assets/berry_bush.gif', { spr_berry_bush: [0,0] });
@@ -125,6 +132,7 @@ Crafty.scene('Loading', function() {
 			// building assets
 			Crafty.sprite(64, 'assets/building_plot.gif', { spr_building_plot: [0,0] });
 			Crafty.sprite(64, 'assets/farm.gif', { spr_farm: [0,0] });
+			Crafty.sprite(64, 'assets/miningcamp.gif', { spr_miningcamp: [0,0] });
 			Crafty.sprite(64, 'assets/house.gif', { spr_house: [0,0] });
 			Crafty.sprite(64, 'assets/granary.gif', { spr_granary: [0,0] });
 			Crafty.sprite(64, 'assets/sample_building_64.gif', { spr_building: [0,0] });

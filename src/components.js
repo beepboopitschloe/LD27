@@ -55,10 +55,15 @@ Crafty.c('Sky', {
 			if (this.isDown('SPACE')) {
 				this.start();
 			}
-			
-			// DEBUG: make day or night. T for toggle.
-			else if (this.isDown('T')) {
-				this.cycle()
+			// DEBUG: turn debug messages on/off.
+			else if (this.isDown('D')) {
+				if (World.debug) {
+					console.log("Turning debug messages off");
+					World.debug = false;
+				} else {
+					console.log("Turning debug messages on");
+					World.debug = true;
+				}
 			}
 		}
 		
@@ -230,10 +235,10 @@ Crafty.c('NocturnalTile', {
 	}
 });
 
-// grass tile
-Crafty.c('Grass', {
+// terrain base component - a tile that can be highlighted and built upon.
+Crafty.c('Terrain', {
 	init: function() {
-		this.requires("2D, Canvas, NocturnalTile, spr_grass");
+		this.requires("2D, Canvas, NocturnalTile");
 		
 		this.areaMap(
 			[0,48],
@@ -260,6 +265,20 @@ Crafty.c('Grass', {
 	}
 });
 
+// grass tile
+Crafty.c('Grass', {
+	init: function() {
+		this.requires("Terrain, spr_grass");
+	}
+});
+
+// stone field tile
+Crafty.c('StoneField', {
+	init: function() {
+		this.requires("Terrain, spr_stonefield");
+	}
+});
+
 // generic component for harvestable resources
 Crafty.c('NaturalResource', {
 	init: function() {
@@ -268,6 +287,8 @@ Crafty.c('NaturalResource', {
 		this.markedForHarvesting = false;
 		this._type = 'food';
 		this._amount = 1;
+		
+		this._leftoverTile = 'Grass';
 		
 		this.bind('MouseOver', this.highlight);
 		
@@ -322,11 +343,17 @@ Crafty.c('NaturalResource', {
 		return this;
 	},
 	
+	leftoverTile: function(stringIn) {
+		this._leftoverTile = stringIn;
+		
+		return this._leftoverTile;
+	},
+	
 	harvest: function() {
 		PlayerVillage.updateResources(this._type, this._amount);
 		Crafty.e('FloatingInfoText').FloatingInfoText(this._x, this._y,
 				this._amount + ' ' + this._type + ' harvested');
-		replaceTile(this, Crafty.e('Grass'), World.map);
+		replaceTile(this, Crafty.e(this._leftoverTile), World.map);
 	},
 	
 	deconstruct: function() {
@@ -369,6 +396,8 @@ Crafty.c('Stone', {
 			[64,48],
 			[32,64]
 			);
+		
+		this.leftoverTile('StoneField');
 	}
 });
 
@@ -442,7 +471,6 @@ Crafty.c('ResourceProducer', {
 	},
 	
 	resourceType: function(str) {
-		console.log('changing type to ' + str);
 		if (typeof str !== 'undefined') {
 			this._type = str;
 		} else {
@@ -476,6 +504,7 @@ Crafty.c('ResourceProducer', {
 		if (this._producing) {
 			if (this._daysUntilYield > 0 && this._full == false) {
 				this._daysUntilYield -= 1;
+				debugMsg(this.name + " has " + this._daysUntilYield + " days until yield");
 				return;
 			} else {
 				if (this._requiresHarvest) {
@@ -487,6 +516,8 @@ Crafty.c('ResourceProducer', {
 					this.yieldResources();
 				}
 			}
+		} else {
+			debugMsg(this.name + " is not producing");
 		}
 	},
 	
@@ -496,7 +527,7 @@ Crafty.c('ResourceProducer', {
 		this._daysUntilYield = this._maxDaysUntilYield;
 		
 		Crafty.e('FloatingInfoText').FloatingInfoText(this._x, this._y,
-			'yielded ' + this._yield + ' ' + this._type);
+			this.name + ' yielded ' + this._yield + ' ' + this._type);
 		
 		this.trigger('YieldedResources');
 		
@@ -571,6 +602,7 @@ Crafty.c('TileDependent', {
 		}
 		
 		this.trigger('UpdatedConditions');
+		debugMsg(this.name + " has " + this.tilesMeetingConditions.length + " tiles meeting conditions");
 		return this.tilesMeetingConditions;
 	}
 });

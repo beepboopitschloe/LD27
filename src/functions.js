@@ -11,6 +11,8 @@ function replaceTile(toReplace, replacement, isoMap, destroyOriginal) {
 	// will do nothing.
 	if (!toReplace.has('TileLogic') || !replacement.has('TileLogic')) {
 		console.log('replaceTile: one or both input tiles do not use the TileLogic component!');
+		debugMsg("toReplace: " + toReplace.name + ".has(TileLogic) == " + toReplace.has('TileLogic'));
+		debugMsg("replacement: " + replacement.name + ".has(TileLogic) == " + replacement.has('TileLogic'));
 		return;
 	}
 	
@@ -46,4 +48,10 @@ function replaceTile(toReplace, replacement, isoMap, destroyOriginal) {
 
 function randomNumber(min, max) {
 	return (Math.floor(Math.random() * max) + min);
+}
+
+function debugMsg(string) {
+	if (World.debug) {
+		console.log("DEBUG: " + string);
+	}
 }
