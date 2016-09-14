@@ -16,8 +16,8 @@ Crafty.c('MouseHandler', {
 		tile = data.tile;
 		e = data.mouse;
 		
-		if (tile.has('Grass')) {
-			Crafty.e('BuildMenu').BuildMenu(tile.tile_x, tile.tile_y);
+		if (tile.has('Terrain')) {
+			Crafty.e('BuildMenu').BuildMenu(tile);
 		}
 		
 		if (tile.has('ResourceProducer')) {
@@ -97,7 +97,7 @@ Crafty.c('PopHandler', {
 	},
 	
 	handlePop: function() {
-		foodPerPerson = 2;
+		foodPerPerson = 2; // DEBUG VALUE = 0 - ORIGINAL VALUE = 2
 		foodNeeds = PlayerVillage.resources.population*foodPerPerson;
 
 		if (PlayerVillage.resources.food >= foodNeeds) {

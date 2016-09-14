@@ -203,8 +203,8 @@ Crafty.c('BuildMenu', {
 		this.bind('TimeIsDay', this.deconstruct);
 	},
 	
-	BuildMenu: function(x, y) {
-		this.placeAtX = x; this.placeAtY = y;
+	BuildMenu: function(tile) {
+		this.placeAtX = tile.tile_x; this.placeAtY = tile.tile_y;
 		
 		this.attr({
 			x: Crafty.mousePos.x,
@@ -215,15 +215,29 @@ Crafty.c('BuildMenu', {
 			z: Game.gui_Z()
 		});
 		
-		console.log(Game.sky_Z() + " " + Game.gui_Z());
+		menuStrings = [ 'Granary', 'House' ];
 		
-		this.menuOptions = [
-				Crafty.e('BuildMenuOption').BuildMenuOption(this, 0, 'TestBuilding'),
-				Crafty.e('BuildMenuOption').BuildMenuOption(this, 1, 'Farm'),
-				Crafty.e('BuildMenuOption').BuildMenuOption(this, 2, 'Granary'),
-				Crafty.e('BuildMenuOption').BuildMenuOption(this, 3, 'House'),
-				Crafty.e('BuildMenuOption').BuildMenuOption(this, 4, 'Close')
-				]
+		// BUILD REQUIREMENTS
+		// using unshift instead of push here means that buildings which can't always be built will be
+		// more prominent on the menu when they can.
+		if (tile.has('StoneField')) {
+			menuStrings.unshift('Mining Camp');
+			debugMsg("Mining camp can be built here");
+		} else if (tile.has('Grass')) {
+			menuStrings.unshift('Farm');
+		} else {
+			debugMsg('something weird is happening in the build menu!');
+		}
+		
+		// Now construct the actual menu
+		this.menuOptions = [ ]
+		debugMsg(menuStrings);
+		for (var i = 0; i < menuStrings.length; i++) {
+			this.menuOptions.push(Crafty.e('BuildMenuOption').BuildMenuOption(this, i, menuStrings[i]));
+		}
+		
+		// now ensure that Close is at the very end
+		this.menuOptions.push(Crafty.e('BuildMenuOption').BuildMenuOption(this, menuStrings.length, 'Close'));
 	},
 	
 	select: function(option) {
@@ -264,11 +278,12 @@ Crafty.c('BuildMenuOption', {
 			name: name,
 			parentMenu: parentMenu } );
 		
-		this.sprite(0, Buildings.buildMenuList.indexOf(this.name), 1, 1);
+		this.sprite(0, Buildings.getOptionSpriteNumber(this.name), 1, 1);
 		
 		this.tooltip = Crafty.e('Tooltip');
 		
 		if (this.name != 'Close') {
+			debugMsg("Setting up menu option for " + this.name);
 			cost = Buildings.lookupCost(this.name);
 		
 			textString = this.name + '; '
